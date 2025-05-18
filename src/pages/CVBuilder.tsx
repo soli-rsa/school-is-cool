@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,7 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { generateResumeId, getStoredResumes, saveResume, deleteResume, exportResumeAsJson } from "@/services/resumeStorage";
 import { Resume, emptyResume } from "@/types/resume";
 import { FileText, Save, Download, Trash, Plus, Edit } from "lucide-react";
-import { toast } from "@/components/ui/toast";
+import { toast } from "@/hooks/use-toast";
 
 const CVBuilder = () => {
   const [activeTab, setActiveTab] = useState("basics");
