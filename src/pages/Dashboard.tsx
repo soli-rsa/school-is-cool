@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import Layout from "@/components/Layout";
 import { Progress } from "@/components/ui/progress";
@@ -7,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { dbService } from "@/services/db";
 import { Link } from "react-router-dom";
-import { ArrowRight, Download, CheckCircle } from "lucide-react";
+import { ArrowRight, Download, CheckCircle, FileText } from "lucide-react";
 
 interface ProgressItem {
   moduleId: string;
