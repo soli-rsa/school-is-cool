@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import DigitalLiteracy from "./pages/DigitalLiteracy";
-import MathResources from "./pages/MathResources";
+import CVBuilder from "./pages/CVBuilder";
 import Science from "./pages/Science";
 import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
@@ -24,7 +24,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/digital-literacy" element={<DigitalLiteracy />} />
-          <Route path="/math-resources" element={<MathResources />} />
+          <Route path="/cv-builder" element={<CVBuilder />} />
           <Route path="/science" element={<Science />} />
           <Route path="/about" element={<About />} />
           <Route path="/dashboard" element={<Dashboard />} />

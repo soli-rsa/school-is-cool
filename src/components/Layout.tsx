@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,7 @@ const Navigation = () => {
   const navItems = [
     { name: "Home", path: "/" },
     { name: "Digital Literacy", path: "/digital-literacy" },
-    { name: "Math Resources", path: "/math-resources" },
+    { name: "CV Builder", path: "/cv-builder" },
     { name: "Science", path: "/science" },
     { name: "About", path: "/about" }
   ];
