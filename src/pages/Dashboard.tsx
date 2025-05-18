@@ -8,6 +8,8 @@ import OfflineAlert from "@/components/dashboard/OfflineAlert";
 import ModuleItem from "@/components/dashboard/ModuleItem";
 import ResourceItem from "@/components/dashboard/ResourceItem";
 import EmptyState from "@/components/dashboard/EmptyState";
+import DashboardSkeleton from "@/components/dashboard/DashboardSkeleton";
+import { FileText } from "lucide-react";
 
 interface ProgressItem {
   moduleId: string;
@@ -183,6 +185,15 @@ const Dashboard = () => {
     
     return Math.floor(seconds) + " seconds ago";
   };
+
+  // Show skeleton while loading
+  if (isLoading) {
+    return (
+      <Layout>
+        <DashboardSkeleton />
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
