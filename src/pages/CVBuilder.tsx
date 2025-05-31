@@ -150,7 +150,7 @@ const CVBuilder = () => {
               </TabsContent>
               
               <TabsContent value="education">
-                <EducationForm />
+                <EducationForm resume={currentResume} updateResume={() => {}} />
                 <div className="flex justify-between">
                   <Button variant="outline" onClick={() => setActiveTab("work")}>Previous: Work</Button>
                   <Button onClick={() => setActiveTab("skills")}>Next: Skills</Button>
