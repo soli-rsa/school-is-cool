@@ -8,54 +8,50 @@ import SkillsForm from "@/components/ResumeForm/SkillsForm";
 import LanguagesForm from "@/components/ResumeForm/LanguagesForm";
 import ResumePreview from "@/components/ResumePreview";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { generateResumeId, getStoredResumes, saveResume, deleteResume, exportResumeAsJson } from "@/services/resumeStorage";
-import { Resume, emptyResume } from "@/types/resume";
+import { generateResumeId, exportResumeAsJson } from "@/services/resumeStorage";
 import { FileText, Save, Download, Trash, Plus, Edit } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useResumeStore } from "@/stores/resumeStore";
 
 const CVBuilder = () => {
   const [activeTab, setActiveTab] = useState("basics");
-  const [currentResume, setCurrentResume] = useState<Resume>({...emptyResume});
-  const [currentResumeId, setCurrentResumeId] = useState<string>("");
-  const [resumeName, setResumeName] = useState("My Resume");
-  const [savedResumes, setSavedResumes] = useState<Record<string, Resume>>({});
+  
+  const {
+    currentResume,
+    currentResumeId,
+    savedResumes,
+    lastSaved,
+    loadSavedResumes,
+    saveCurrentResume,
+    deleteResumeById,
+    loadResume,
+    createNewResume,
+    setCurrentResumeId,
+    enableAutoSave
+  } = useResumeStore();
   
   // Load saved resumes on component mount
   useEffect(() => {
-    const resumes = getStoredResumes();
-    setSavedResumes(resumes);
+    loadSavedResumes();
+    enableAutoSave();
     
     // If there are saved resumes, load the first one
-    const resumeIds = Object.keys(resumes);
-    if (resumeIds.length > 0) {
+    const resumeIds = Object.keys(savedResumes);
+    if (resumeIds.length > 0 && !currentResumeId) {
       const firstId = resumeIds[0];
-      setCurrentResumeId(firstId);
-      setCurrentResume(resumes[firstId]);
-      setResumeName(resumes[firstId].basics.name || "My Resume");
+      loadResume(firstId);
     }
   }, []);
   
-  const updateResume = (updatedResume: Resume) => {
-    setCurrentResume(updatedResume);
-  };
-  
-  const handleSaveResume = () => {
+  const handleSaveResume = async () => {
     const id = currentResumeId || generateResumeId();
     
-    saveResume(id, currentResume);
+    await saveCurrentResume(id);
     
     if (!currentResumeId) {
       setCurrentResumeId(id);
     }
-    
-    // Update the saved resumes list
-    setSavedResumes({
-      ...savedResumes,
-      [id]: currentResume
-    });
     
     toast({
       title: "Resume Saved",
@@ -64,41 +60,17 @@ const CVBuilder = () => {
   };
   
   const handleCreateNew = () => {
-    setCurrentResume({...emptyResume});
-    setCurrentResumeId("");
-    setResumeName("My Resume");
+    createNewResume();
     setActiveTab("basics");
   };
   
   const handleLoadResume = (id: string) => {
-    setCurrentResume(savedResumes[id]);
-    setCurrentResumeId(id);
-    setResumeName(savedResumes[id].basics.name || "My Resume");
+    loadResume(id);
     setActiveTab("basics");
   };
   
   const handleDeleteResume = (id: string) => {
-    deleteResume(id);
-    
-    // Update the saved resumes list
-    const updatedResumes = {...savedResumes};
-    delete updatedResumes[id];
-    setSavedResumes(updatedResumes);
-    
-    // If the current resume is being deleted, reset the state
-    if (id === currentResumeId) {
-      const remainingIds = Object.keys(updatedResumes);
-      if (remainingIds.length > 0) {
-        const firstId = remainingIds[0];
-        setCurrentResumeId(firstId);
-        setCurrentResume(updatedResumes[firstId]);
-        setResumeName(updatedResumes[firstId].basics.name || "My Resume");
-      } else {
-        setCurrentResume({...emptyResume});
-        setCurrentResumeId("");
-        setResumeName("My Resume");
-      }
-    }
+    deleteResumeById(id);
     
     toast({
       title: "Resume Deleted",
@@ -110,6 +82,8 @@ const CVBuilder = () => {
     const fileName = (currentResume.basics.name || 'resume').toLowerCase().replace(/\s+/g, '-');
     exportResumeAsJson(currentResume, fileName);
   };
+  
+  const resumeName = currentResume.basics.name || "My Resume";
   
   return (
     <Layout>
@@ -130,6 +104,11 @@ const CVBuilder = () => {
                     <CardTitle>{resumeName}</CardTitle>
                     <CardDescription>
                       {currentResumeId ? "Edit and save your resume" : "Create and save your new resume"}
+                      {lastSaved && (
+                        <span className="block text-xs text-muted-foreground mt-1">
+                          Last saved: {lastSaved.toLocaleTimeString()}
+                        </span>
+                      )}
                     </CardDescription>
                   </div>
                   <div className="flex gap-2">
@@ -156,14 +135,14 @@ const CVBuilder = () => {
               </TabsList>
               
               <TabsContent value="basics">
-                <BasicInfoForm resume={currentResume} updateResume={updateResume} />
+                <BasicInfoForm />
                 <div className="flex justify-end gap-4">
                   <Button onClick={() => setActiveTab("work")}>Next: Work Experience</Button>
                 </div>
               </TabsContent>
               
               <TabsContent value="work">
-                <WorkExperienceForm resume={currentResume} updateResume={updateResume} />
+                <WorkExperienceForm />
                 <div className="flex justify-between">
                   <Button variant="outline" onClick={() => setActiveTab("basics")}>Previous: Basics</Button>
                   <Button onClick={() => setActiveTab("education")}>Next: Education</Button>
@@ -171,7 +150,7 @@ const CVBuilder = () => {
               </TabsContent>
               
               <TabsContent value="education">
-                <EducationForm resume={currentResume} updateResume={updateResume} />
+                <EducationForm />
                 <div className="flex justify-between">
                   <Button variant="outline" onClick={() => setActiveTab("work")}>Previous: Work</Button>
                   <Button onClick={() => setActiveTab("skills")}>Next: Skills</Button>
@@ -179,7 +158,7 @@ const CVBuilder = () => {
               </TabsContent>
               
               <TabsContent value="skills">
-                <SkillsForm resume={currentResume} updateResume={updateResume} />
+                <SkillsForm />
                 <div className="flex justify-between">
                   <Button variant="outline" onClick={() => setActiveTab("education")}>Previous: Education</Button>
                   <Button onClick={() => setActiveTab("languages")}>Next: Languages</Button>
@@ -187,7 +166,7 @@ const CVBuilder = () => {
               </TabsContent>
               
               <TabsContent value="languages">
-                <LanguagesForm resume={currentResume} updateResume={updateResume} />
+                <LanguagesForm />
                 <div className="flex justify-between">
                   <Button variant="outline" onClick={() => setActiveTab("skills")}>Previous: Skills</Button>
                 </div>

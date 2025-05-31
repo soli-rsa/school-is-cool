@@ -1,235 +1,176 @@
 
-import React from "react";
-import { Resume } from "@/types/resume";
+import React, { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormField } from "@/components/forms/FormField";
+import { DynamicFieldArray } from "@/components/forms/DynamicFieldArray";
+import { workExperienceSchema } from "@/schemas/resumeSchema";
+import { useResumeStore } from "@/stores/resumeStore";
+import { z } from "zod";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
-interface WorkExperienceFormProps {
-  resume: Resume;
-  updateResume: (updatedResume: Resume) => void;
-}
+type WorkFormData = {
+  work: z.infer<typeof workExperienceSchema>[];
+};
 
-const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ resume, updateResume }) => {
-  const addWorkExperience = () => {
-    const updatedResume = {
-      ...resume,
-      work: [
-        ...(resume.work || []),
-        {
-          company: "",
-          position: "",
-          website: "",
-          startDate: "",
-          endDate: "",
-          summary: "",
-          highlights: []
-        }
-      ]
-    };
-    updateResume(updatedResume);
-  };
+const WorkExperienceForm: React.FC = () => {
+  const { currentResume, updateResume } = useResumeStore();
+  
+  const form = useForm<WorkFormData>({
+    resolver: zodResolver(z.object({ work: z.array(workExperienceSchema) })),
+    defaultValues: { work: currentResume.work || [] },
+    mode: "onChange"
+  });
 
-  const updateWorkExperience = (index: number, field: string, value: string) => {
-    if (!resume.work) return;
-    
-    const updatedWork = [...resume.work];
-    updatedWork[index] = {
-      ...updatedWork[index],
-      [field]: value
-    };
-
+  const { control, watch, reset } = form;
+  const formData = watch();
+  
+  useEffect(() => {
     updateResume({
-      ...resume,
-      work: updatedWork
+      ...currentResume,
+      work: formData.work
     });
-  };
+  }, [formData.work, currentResume, updateResume]);
 
-  const addHighlight = (workIndex: number) => {
-    if (!resume.work) return;
-    
-    const updatedWork = [...resume.work];
-    updatedWork[workIndex] = {
-      ...updatedWork[workIndex],
-      highlights: [...(updatedWork[workIndex].highlights || []), ""]
-    };
+  useEffect(() => {
+    reset({ work: currentResume.work || [] });
+  }, [currentResume.work, reset]);
 
-    updateResume({
-      ...resume,
-      work: updatedWork
-    });
-  };
+  const WorkExperienceFields = ({ field, index }: { field: any; index: number }) => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={control}
+          name={`work.${index}.company`}
+          label="Company"
+          placeholder="Company Name"
+          required
+        />
+        <FormField
+          control={control}
+          name={`work.${index}.position`}
+          label="Position"
+          placeholder="Job Title"
+          required
+        />
+        <FormField
+          control={control}
+          name={`work.${index}.website`}
+          label="Website"
+          type="url"
+          placeholder="https://company.com"
+        />
+        <FormField
+          control={control}
+          name={`work.${index}.startDate`}
+          label="Start Date"
+          placeholder="2020-01"
+          required
+        />
+        <FormField
+          control={control}
+          name={`work.${index}.endDate`}
+          label="End Date"
+          placeholder="2023-01 (or 'Present')"
+        />
+      </div>
 
-  const updateHighlight = (workIndex: number, highlightIndex: number, value: string) => {
-    if (!resume.work || !resume.work[workIndex].highlights) return;
-    
-    const updatedWork = [...resume.work];
-    const updatedHighlights = [...updatedWork[workIndex].highlights!];
-    updatedHighlights[highlightIndex] = value;
+      <FormField
+        control={control}
+        name={`work.${index}.summary`}
+        label="Summary"
+        type="textarea"
+        placeholder="Brief description of your role and responsibilities"
+      />
 
-    updatedWork[workIndex] = {
-      ...updatedWork[workIndex],
-      highlights: updatedHighlights
-    };
-
-    updateResume({
-      ...resume,
-      work: updatedWork
-    });
-  };
-
-  const removeHighlight = (workIndex: number, highlightIndex: number) => {
-    if (!resume.work || !resume.work[workIndex].highlights) return;
-    
-    const updatedWork = [...resume.work];
-    const updatedHighlights = updatedWork[workIndex].highlights!.filter((_, i) => i !== highlightIndex);
-
-    updatedWork[workIndex] = {
-      ...updatedWork[workIndex],
-      highlights: updatedHighlights
-    };
-
-    updateResume({
-      ...resume,
-      work: updatedWork
-    });
-  };
-
-  const removeWorkExperience = (index: number) => {
-    if (!resume.work) return;
-    
-    const updatedWork = resume.work.filter((_, i) => i !== index);
-    
-    updateResume({
-      ...resume,
-      work: updatedWork
-    });
-  };
+      <HighlightsField workIndex={index} control={control} />
+    </div>
+  );
 
   return (
     <Card className="mb-6">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader>
         <CardTitle>Work Experience</CardTitle>
-        <Button onClick={addWorkExperience} size="sm" variant="outline">
-          <Plus className="h-4 w-4 mr-1" /> Add Job
-        </Button>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {(!resume.work || resume.work.length === 0) && (
-          <p className="text-center text-muted-foreground py-4">No work experience added. Click "Add Job" to add your work history.</p>
-        )}
-
-        {resume.work?.map((work, workIndex) => (
-          <div key={workIndex} className="border rounded-md p-4 relative">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="absolute right-2 top-2"
-              onClick={() => removeWorkExperience(workIndex)}
-            >
-              <Trash className="h-4 w-4 text-destructive" />
-              <span className="sr-only">Remove</span>
-            </Button>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div className="space-y-2">
-                <Label htmlFor={`company-${workIndex}`}>Company</Label>
-                <Input
-                  id={`company-${workIndex}`}
-                  value={work.company}
-                  onChange={(e) => updateWorkExperience(workIndex, "company", e.target.value)}
-                  placeholder="Company Name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor={`position-${workIndex}`}>Position</Label>
-                <Input
-                  id={`position-${workIndex}`}
-                  value={work.position}
-                  onChange={(e) => updateWorkExperience(workIndex, "position", e.target.value)}
-                  placeholder="Job Title"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor={`website-${workIndex}`}>Website</Label>
-                <Input
-                  id={`website-${workIndex}`}
-                  value={work.website || ""}
-                  onChange={(e) => updateWorkExperience(workIndex, "website", e.target.value)}
-                  placeholder="https://company.com"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor={`startDate-${workIndex}`}>Start Date</Label>
-                <Input
-                  id={`startDate-${workIndex}`}
-                  value={work.startDate}
-                  onChange={(e) => updateWorkExperience(workIndex, "startDate", e.target.value)}
-                  placeholder="2020-01"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor={`endDate-${workIndex}`}>End Date</Label>
-                <Input
-                  id={`endDate-${workIndex}`}
-                  value={work.endDate || ""}
-                  onChange={(e) => updateWorkExperience(workIndex, "endDate", e.target.value)}
-                  placeholder="2023-01 (or 'Present')"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2 mb-4">
-              <Label htmlFor={`summary-${workIndex}`}>Summary</Label>
-              <Textarea
-                id={`summary-${workIndex}`}
-                value={work.summary || ""}
-                onChange={(e) => updateWorkExperience(workIndex, "summary", e.target.value)}
-                placeholder="Brief description of your role and responsibilities"
-              />
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <Label>Key Achievements/Responsibilities</Label>
-                <Button 
-                  onClick={() => addHighlight(workIndex)} 
-                  size="sm" 
-                  variant="outline"
-                >
-                  <Plus className="h-4 w-4 mr-1" /> Add
-                </Button>
-              </div>
-
-              {work.highlights?.map((highlight, highlightIndex) => (
-                <div key={highlightIndex} className="flex gap-2 items-start">
-                  <Input
-                    value={highlight}
-                    onChange={(e) => updateHighlight(workIndex, highlightIndex, e.target.value)}
-                    placeholder="Achieved X by doing Y which resulted in Z"
-                  />
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => removeHighlight(workIndex, highlightIndex)}
-                  >
-                    <Trash className="h-4 w-4" />
-                    <span className="sr-only">Remove</span>
-                  </Button>
-                </div>
-              ))}
-
-              {(!work.highlights || work.highlights.length === 0) && (
-                <p className="text-sm text-muted-foreground">Add key achievements or responsibilities</p>
-              )}
-            </div>
-          </div>
-        ))}
+      <CardContent>
+        <DynamicFieldArray
+          control={control}
+          name="work"
+          addButtonText="Add Job"
+          emptyMessage="No work experience added. Click 'Add Job' to add your work history."
+          defaultValue={{
+            company: "",
+            position: "",
+            website: "",
+            startDate: "",
+            endDate: "",
+            summary: "",
+            highlights: []
+          }}
+        >
+          {(field, index) => <WorkExperienceFields field={field} index={index} />}
+        </DynamicFieldArray>
       </CardContent>
     </Card>
+  );
+};
+
+const HighlightsField = ({ workIndex, control }: { workIndex: number; control: any }) => {
+  const highlights = watch(`work.${workIndex}.highlights`) || [];
+
+  const addHighlight = () => {
+    const currentHighlights = control._getWatch(`work.${workIndex}.highlights`) || [];
+    control._updateFieldArray(`work.${workIndex}.highlights`, [...currentHighlights, ""]);
+  };
+
+  const removeHighlight = (highlightIndex: number) => {
+    const currentHighlights = control._getWatch(`work.${workIndex}.highlights`) || [];
+    const updated = currentHighlights.filter((_: any, i: number) => i !== highlightIndex);
+    control._updateFieldArray(`work.${workIndex}.highlights`, updated);
+  };
+
+  const updateHighlight = (highlightIndex: number, value: string) => {
+    const currentHighlights = control._getWatch(`work.${workIndex}.highlights`) || [];
+    const updated = [...currentHighlights];
+    updated[highlightIndex] = value;
+    control._updateFieldArray(`work.${workIndex}.highlights`, updated);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <Label>Key Achievements/Responsibilities</Label>
+        <Button onClick={addHighlight} size="sm" variant="outline">
+          <Plus className="h-4 w-4 mr-1" /> Add
+        </Button>
+      </div>
+
+      {highlights.map((highlight: string, highlightIndex: number) => (
+        <div key={highlightIndex} className="flex gap-2 items-start">
+          <Input
+            value={highlight}
+            onChange={(e) => updateHighlight(highlightIndex, e.target.value)}
+            placeholder="Achieved X by doing Y which resulted in Z"
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => removeHighlight(highlightIndex)}
+          >
+            <Trash className="h-4 w-4" />
+            <span className="sr-only">Remove</span>
+          </Button>
+        </div>
+      ))}
+
+      {highlights.length === 0 && (
+        <p className="text-sm text-muted-foreground">Add key achievements or responsibilities</p>
+      )}
+    </div>
   );
 };
 
