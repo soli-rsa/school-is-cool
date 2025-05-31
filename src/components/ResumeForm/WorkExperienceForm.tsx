@@ -22,17 +22,7 @@ const WorkExperienceForm: React.FC = () => {
   
   const form = useForm<WorkFormData>({
     resolver: zodResolver(z.object({ work: z.array(workExperienceSchema) })),
-    defaultValues: { 
-      work: (currentResume.work || []).map(item => ({
-        company: item.company || "",
-        position: item.position || "",
-        website: item.website || "",
-        startDate: item.startDate || "",
-        endDate: item.endDate || "",
-        summary: item.summary || "",
-        highlights: item.highlights || []
-      }))
-    },
+    defaultValues: { work: currentResume.work || [] },
     mode: "onChange"
   });
 
@@ -47,18 +37,7 @@ const WorkExperienceForm: React.FC = () => {
   }, [formData.work, currentResume, updateResume]);
 
   useEffect(() => {
-    const resetData = {
-      work: (currentResume.work || []).map(item => ({
-        company: item.company || "",
-        position: item.position || "",
-        website: item.website || "",
-        startDate: item.startDate || "",
-        endDate: item.endDate || "",
-        summary: item.summary || "",
-        highlights: item.highlights || []
-      }))
-    };
-    reset(resetData);
+    reset({ work: currentResume.work || [] });
   }, [currentResume.work, reset]);
 
   const WorkExperienceFields = ({ field, index }: { field: any; index: number }) => (
@@ -108,7 +87,7 @@ const WorkExperienceForm: React.FC = () => {
         placeholder="Brief description of your role and responsibilities"
       />
 
-      <HighlightsField workIndex={index} control={control} watch={watch} />
+      <HighlightsField workIndex={index} control={control} />
     </div>
   );
 
@@ -140,7 +119,7 @@ const WorkExperienceForm: React.FC = () => {
   );
 };
 
-const HighlightsField = ({ workIndex, control, watch }: { workIndex: number; control: any; watch: any }) => {
+const HighlightsField = ({ workIndex, control }: { workIndex: number; control: any }) => {
   const highlights = watch(`work.${workIndex}.highlights`) || [];
 
   const addHighlight = () => {

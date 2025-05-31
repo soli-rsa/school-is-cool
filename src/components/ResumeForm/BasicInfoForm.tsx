@@ -15,22 +15,7 @@ const BasicInfoForm: React.FC = () => {
   
   const form = useForm<BasicsFormData>({
     resolver: zodResolver(basicsSchema),
-    defaultValues: {
-      name: currentResume.basics.name || "",
-      label: currentResume.basics.label || "",
-      email: currentResume.basics.email || "",
-      phone: currentResume.basics.phone || "",
-      url: currentResume.basics.url || "",
-      summary: currentResume.basics.summary || "",
-      location: {
-        address: currentResume.basics.location?.address || "",
-        city: currentResume.basics.location?.city || "",
-        postalCode: currentResume.basics.location?.postalCode || "",
-        region: currentResume.basics.location?.region || "",
-        countryCode: currentResume.basics.location?.countryCode || "",
-      },
-      profiles: currentResume.basics.profiles || []
-    },
+    defaultValues: currentResume.basics,
     mode: "onChange"
   });
 
@@ -48,23 +33,7 @@ const BasicInfoForm: React.FC = () => {
 
   // Reset form when currentResume changes (e.g., when loading a different resume)
   useEffect(() => {
-    const resetData = {
-      name: currentResume.basics.name || "",
-      label: currentResume.basics.label || "",
-      email: currentResume.basics.email || "",
-      phone: currentResume.basics.phone || "",
-      url: currentResume.basics.url || "",
-      summary: currentResume.basics.summary || "",
-      location: {
-        address: currentResume.basics.location?.address || "",
-        city: currentResume.basics.location?.city || "",
-        postalCode: currentResume.basics.location?.postalCode || "",
-        region: currentResume.basics.location?.region || "",
-        countryCode: currentResume.basics.location?.countryCode || "",
-      },
-      profiles: currentResume.basics.profiles || []
-    };
-    reset(resetData);
+    reset(currentResume.basics);
   }, [currentResume.basics, reset]);
 
   return (

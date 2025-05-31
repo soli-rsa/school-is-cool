@@ -1,89 +1,105 @@
 
-import React, { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import React from "react";
+import { Resume } from "@/types/resume";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FormField } from "@/components/forms/FormField";
-import { DynamicFieldArray } from "@/components/forms/DynamicFieldArray";
-import { languageSchema } from "@/schemas/resumeSchema";
-import { useResumeStore } from "@/stores/resumeStore";
-import { z } from "zod";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Plus, Trash } from "lucide-react";
 
-type LanguagesFormData = {
-  languages: z.infer<typeof languageSchema>[];
-};
+interface LanguagesFormProps {
+  resume: Resume;
+  updateResume: (updatedResume: Resume) => void;
+}
 
-const LanguagesForm: React.FC = () => {
-  const { currentResume, updateResume } = useResumeStore();
-  
-  const form = useForm<LanguagesFormData>({
-    resolver: zodResolver(z.object({ languages: z.array(languageSchema) })),
-    defaultValues: { 
-      languages: (currentResume.languages || []).map(language => ({
-        language: language.language || "",
-        fluency: language.fluency || ""
-      }))
-    },
-    mode: "onChange"
-  });
-
-  const { control, watch, reset } = form;
-  const formData = watch();
-  
-  useEffect(() => {
-    updateResume({
-      ...currentResume,
-      languages: formData.languages
-    });
-  }, [formData.languages, currentResume, updateResume]);
-
-  useEffect(() => {
-    const resetData = {
-      languages: (currentResume.languages || []).map(language => ({
-        language: language.language || "",
-        fluency: language.fluency || ""
-      }))
+const LanguagesForm: React.FC<LanguagesFormProps> = ({ resume, updateResume }) => {
+  const addLanguage = () => {
+    const updatedResume = {
+      ...resume,
+      languages: [
+        ...(resume.languages || []),
+        {
+          language: "",
+          fluency: ""
+        }
+      ]
     };
-    reset(resetData);
-  }, [currentResume.languages, reset]);
+    updateResume(updatedResume);
+  };
 
-  const LanguageFields = ({ field, index }: { field: any; index: number }) => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <FormField
-        control={control}
-        name={`languages.${index}.language`}
-        label="Language"
-        placeholder="e.g. English, Zulu, Afrikaans"
-        required
-      />
-      <FormField
-        control={control}
-        name={`languages.${index}.fluency`}
-        label="Fluency Level"
-        placeholder="e.g. Native, Fluent, Intermediate, Basic"
-        required
-      />
-    </div>
-  );
+  const updateLanguage = (index: number, field: string, value: string) => {
+    if (!resume.languages) return;
+    
+    const updatedLanguages = [...resume.languages];
+    updatedLanguages[index] = {
+      ...updatedLanguages[index],
+      [field]: value
+    };
+
+    updateResume({
+      ...resume,
+      languages: updatedLanguages
+    });
+  };
+
+  const removeLanguage = (index: number) => {
+    if (!resume.languages) return;
+    
+    const updatedLanguages = resume.languages.filter((_, i) => i !== index);
+    
+    updateResume({
+      ...resume,
+      languages: updatedLanguages
+    });
+  };
 
   return (
     <Card className="mb-6">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Languages</CardTitle>
+        <Button onClick={addLanguage} size="sm" variant="outline">
+          <Plus className="h-4 w-4 mr-1" /> Add Language
+        </Button>
       </CardHeader>
-      <CardContent>
-        <DynamicFieldArray
-          control={control}
-          name="languages"
-          addButtonText="Add Language"
-          emptyMessage="No languages added. Click 'Add Language' to add languages you speak."
-          defaultValue={{
-            language: "",
-            fluency: ""
-          }}
-        >
-          {(field, index) => <LanguageFields field={field} index={index} />}
-        </DynamicFieldArray>
+      <CardContent className="space-y-6">
+        {(!resume.languages || resume.languages.length === 0) && (
+          <p className="text-center text-muted-foreground py-4">No languages added. Click "Add Language" to add languages you speak.</p>
+        )}
+
+        {resume.languages?.map((language, languageIndex) => (
+          <div key={languageIndex} className="border rounded-md p-4 relative">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="absolute right-2 top-2"
+              onClick={() => removeLanguage(languageIndex)}
+            >
+              <Trash className="h-4 w-4 text-destructive" />
+              <span className="sr-only">Remove</span>
+            </Button>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor={`language-${languageIndex}`}>Language</Label>
+                <Input
+                  id={`language-${languageIndex}`}
+                  value={language.language}
+                  onChange={(e) => updateLanguage(languageIndex, "language", e.target.value)}
+                  placeholder="e.g. English, Zulu, Afrikaans"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor={`fluency-${languageIndex}`}>Fluency Level</Label>
+                <Input
+                  id={`fluency-${languageIndex}`}
+                  value={language.fluency}
+                  onChange={(e) => updateLanguage(languageIndex, "fluency", e.target.value)}
+                  placeholder="e.g. Native, Fluent, Intermediate, Basic"
+                />
+              </div>
+            </div>
+          </div>
+        ))}
       </CardContent>
     </Card>
   );
