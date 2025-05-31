@@ -1,12 +1,12 @@
 
 import React from "react";
-import { useFieldArray, Control, FieldPath, FieldValues } from "react-hook-form";
+import { useFieldArray, Control, FieldValues, ArrayPath } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash } from "lucide-react";
 
 interface DynamicFieldArrayProps<T extends FieldValues> {
   control: Control<T>;
-  name: FieldPath<T>;
+  name: ArrayPath<T>;
   children: (field: any, index: number, remove: (index: number) => void) => React.ReactNode;
   addButtonText: string;
   emptyMessage: string;
