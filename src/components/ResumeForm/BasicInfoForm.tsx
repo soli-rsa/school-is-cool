@@ -42,7 +42,10 @@ const BasicInfoForm: React.FC = () => {
   useEffect(() => {
     updateResume({
       ...currentResume,
-      basics: formData
+      basics: {
+        ...formData,
+        name: formData.name || ""  // Ensure name is never undefined
+      }
     });
   }, [formData, currentResume, updateResume]);
 

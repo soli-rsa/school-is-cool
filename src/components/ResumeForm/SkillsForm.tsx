@@ -38,7 +38,10 @@ const SkillsForm: React.FC = () => {
   useEffect(() => {
     updateResume({
       ...currentResume,
-      skills: formData.skills
+      skills: formData.skills.map(skill => ({
+        ...skill,
+        name: skill.name || ""
+      }))
     });
   }, [formData.skills, currentResume, updateResume]);
 

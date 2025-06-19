@@ -42,7 +42,12 @@ const WorkExperienceForm: React.FC = () => {
   useEffect(() => {
     updateResume({
       ...currentResume,
-      work: formData.work
+      work: formData.work.map(item => ({
+        ...item,
+        company: item.company || "",
+        position: item.position || "",
+        startDate: item.startDate || ""
+      }))
     });
   }, [formData.work, currentResume, updateResume]);
 

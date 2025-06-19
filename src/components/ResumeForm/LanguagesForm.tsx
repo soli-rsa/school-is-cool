@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -33,7 +32,10 @@ const LanguagesForm: React.FC = () => {
   useEffect(() => {
     updateResume({
       ...currentResume,
-      languages: formData.languages
+      languages: formData.languages.map(language => ({
+        language: language.language || "",
+        fluency: language.fluency || ""
+      }))
     });
   }, [formData.languages, currentResume, updateResume]);
 
